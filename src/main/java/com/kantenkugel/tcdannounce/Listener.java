@@ -55,7 +55,7 @@ public class Listener extends ListenerAdapter {
         } else {
             Role role = roles.get(0);
             role.getManager().setMentionable(true)
-                    .queue(v -> channel.sendMessage(role.getAsMention() + ' ' + textToSend)
+                    .queue(v -> channel.sendMessage(String.format("%s %s (announcement by %s)", role.getAsMention(), textToSend, event.getAuthor()))
                             .queue(msg -> role.getManager().setMentionable(false).queue())
                     );
         }
