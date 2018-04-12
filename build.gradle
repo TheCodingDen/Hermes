@@ -1,0 +1,25 @@
+plugins {
+    id'java'
+    id'application'
+    id'com.github.johnrengelman.shadow' version '2.0.2'
+}
+
+mainClassName = 'com.kantenkugel.tcdannounce.TCDAnnounce'
+
+version '1.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    //JDA
+    compile 'net.dv8tion:JDA:3.6.0_355'
+
+    //Logback
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+}
+
+compileJava.options.encoding = 'UTF-8'
