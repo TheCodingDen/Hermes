@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class Listener extends ListenerAdapter {
     private static final String HELP_MESSAGE = "This bot is very simple.\nConfigured roles (%s) can make announcements " +
-            "with the `announce` command, and everyone can join/leave announcement roles with the `sub`/`subscribe` command.";
+            "with the `announce` command, and everyone can join/leave announcement roles with the `sub`/`subscribe` command (if enabled).";
 
     private static final Map<Long, Message> CACHE = new FixedSizeCache<>(5);
     private Pattern selfMentionPattern;
@@ -25,7 +25,7 @@ public class Listener extends ListenerAdapter {
     public void onReady(ReadyEvent event) {
         String inviteUrl = event.getJDA().asBot().getInviteUrl(Permission.MANAGE_ROLES);
         selfMentionPattern = Pattern.compile("^<@!?"+Pattern.quote(event.getJDA().getSelfUser().getId())+">\\s*");
-        Statics.LOG.info("Bot is ready. Use following link to invite to servers: {}", inviteUrl);
+        TCDAnnounce.LOG.info("Bot is ready. Use following link to invite to servers: {}", inviteUrl);
     }
 
     @Override
@@ -39,18 +39,23 @@ public class Listener extends ListenerAdapter {
         if(!matcher.find())
             return;
         String[] commandSplit = matcher.replaceFirst("").split("\\s+", 2);
+        GuildSettings.GuildSetting guildSetting = GuildSettings.forGuild(event.getGuild());
 
         //handle each command accordingly
         switch(commandSplit[0]) {
             case "help":
-                handleHelp(event);
+                handleHelp(event, guildSetting);
                 break;
             case "announce":
-                handleAnnounce(event, commandSplit);
+                handleAnnounce(event, guildSetting, commandSplit);
                 break;
             case "sub":
             case "subscribe":
-                handleSubscription(event, commandSplit);
+                handleSubscription(event, guildSetting, commandSplit);
+                break;
+            case "config":
+            case "configure":
+                handleConfiguration(event, guildSetting, commandSplit);
                 break;
         }
     }
@@ -62,12 +67,12 @@ public class Listener extends ListenerAdapter {
         if(botMsg == null)
             return;
         String[] splits = event.getMessage().getContentRaw().split("\\s*\\|\\s*", 3);
-        botMsg.editMessage(getContent(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getAuthor())).queue();
+        botMsg.editMessage(getAnnouncementText(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getAuthor())).queue();
     }
 
-    private static void handleHelp(GuildMessageReceivedEvent event) {
+    private static void handleHelp(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting) {
         String help = String.format(HELP_MESSAGE, event.getGuild().getRoles().stream()
-                .filter(r -> Statics.ALLOWED_ROLE_IDS.contains(r.getIdLong()))
+                .filter(guildSetting::isAnnouncerRole)
                 .map(r -> r.getName().replace("@everyone", "@ everyone"))
                 .collect(Collectors.joining(", "))
         );
@@ -78,9 +83,9 @@ public class Listener extends ListenerAdapter {
         }
     }
 
-    private static void handleAnnounce(GuildMessageReceivedEvent event, String[] commandSplit) {
+    private static void handleAnnounce(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting, String[] commandSplit) {
         //check if member is allowed to announce based on roles
-        if(event.getMember().getRoles().stream().noneMatch(r -> Statics.ALLOWED_ROLE_IDS.contains(r.getIdLong())))
+        if(!guildSetting.isAnnouncer(event.getMember()))
             return;
 
         //check if bot can manage roles
@@ -118,11 +123,13 @@ public class Listener extends ListenerAdapter {
         }
 
         //get and check role to mention
-        List<Role> roles = event.getGuild().getRolesByName(splits[0], true);
+        List<Role> roles = event.getGuild().getRolesByName(splits[0], true).stream()
+                .filter(guildSetting::isAnnouncementRole)
+                .collect(Collectors.toList());
         if(roles.size() == 0) {
-            event.getChannel().sendMessage("No roles matching "+splits[0].trim()+" found!").queue();
+            event.getChannel().sendMessage("No (announcement) roles matching "+splits[0].trim()+" found!").queue();
         } else if(roles.size() > 1) {
-            event.getChannel().sendMessage("Too many roles with this name!").queue();
+            event.getChannel().sendMessage("Too many announcement roles with this name!").queue();
         } else if(!event.getGuild().getSelfMember().canInteract(roles.get(0))) {
             event.getChannel().sendMessage("Can't interact with this role!").queue();
         } else {
@@ -130,7 +137,7 @@ public class Listener extends ListenerAdapter {
             //announce
             role.getManager().setMentionable(true)
                     .queue(v -> {
-                        channel.sendMessage(getContent(role, textToSend, event.getAuthor()))
+                        channel.sendMessage(getAnnouncementText(role, textToSend, event.getAuthor()))
                                 .queue(msg -> {
                                     //cache sent message for future edits
                                     CACHE.put(event.getMessageIdLong(), msg);
@@ -144,7 +151,13 @@ public class Listener extends ListenerAdapter {
         }
     }
 
-    private static void handleSubscription(GuildMessageReceivedEvent event, String[] commandSplit) {
+    private static void handleSubscription(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting, String[] commandSplit) {
+        //abort if subscriptions are not enabled
+        if(!guildSetting.isSubscriptionsEnabled()) {
+            event.getChannel().sendMessage("Subscriptions are not enabled for this server").queue();
+            return;
+        }
+
         if(commandSplit.length == 1) {
             event.getChannel().sendMessage("Syntax: `sub[scribe] role_name`").queue();
             return;
@@ -162,36 +175,135 @@ public class Listener extends ListenerAdapter {
             return;
         }
 
-        List<Role> rolesByName = event.getGuild().getRolesByName(args[0], true);
+        List<Role> rolesByName = event.getGuild().getRolesByName(args[0], true).stream()
+                .filter(guildSetting::isAnnouncementRole)
+                .collect(Collectors.toList());
         if(rolesByName.size() == 0) {
-            event.getChannel().sendMessage("No roles matching "+args[0]+" found!").queue();
+            event.getChannel().sendMessage("No (announcement) roles matching "+args[0]+" found!").queue();
         } else if(rolesByName.size() > 1) {
-            event.getChannel().sendMessage("Too many roles with this name!").queue();
+            event.getChannel().sendMessage("Too many announcement roles with this name!").queue();
         } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
-            event.getChannel().sendMessage("Role is not available to subscription!").queue();
+            event.getChannel().sendMessage("Can't interact with this role!").queue();
         } else {
             Role role = rolesByName.get(0);
             Member member = event.getMember();
-            boolean canReact = event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MESSAGE_ADD_REACTION);
             if(member.getRoles().contains(role)) {
                 event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
-                    if(canReact)
-                        event.getMessage().addReaction("\u2705").queue();
-                    else
-                        event.getChannel().sendMessage("Done").queue();
+                    Utils.reactSuccess(event);
                 });
             } else {
                 event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
-                    if(canReact)
-                        event.getMessage().addReaction("\u2705").queue();
-                    else
-                        event.getChannel().sendMessage("Done").queue();
+                    Utils.reactSuccess(event);
                 });
             }
         }
     }
 
-    private static String getContent(Role role, String text, User author) {
+    private static void handleConfiguration(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting, String[] commandSplit) {
+        //admin only
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR))
+            return;
+
+        TextChannel channel = event.getChannel();
+
+        if(commandSplit.length == 1) {
+            channel.sendMessageFormat(
+                    "Current configuration:\n" +
+                            "**Roles with announce permission** (change with `config(ure) announcers add/remove role_name`):\n%s\n" +
+                            "**Announcement roles** (change with `config(ure) roles add/remove role_name`):\n%s\n" +
+                            "**Subscriptions enabled?** (allows `sub(scribe)` command, change with `config(ure) enablesub(scription)s true/false`)\n%s",
+                    getRoleString(guildSetting.getAnnouncerRoles(event.getGuild())),
+                    getRoleString(guildSetting.getAnnouncementRoles(event.getGuild())),
+                    guildSetting.isSubscriptionsEnabled()
+            ).queue();
+            return;
+        }
+
+        String[] args = commandSplit[1].toLowerCase().split("\\s+", 4);
+
+        List<Role> rolesByName;
+        switch(args[0]) {
+            case "announcers":
+                if(args.length != 3) {
+                    channel.sendMessage("Invalid number of arguments").queue();
+                    return;
+                }
+                rolesByName = event.getGuild().getRolesByName(args[2], true);
+                if(rolesByName.size() != 1) {
+                    channel.sendMessage("None or too many Roles matching given name").queue();
+                } else {
+                    if(args[1].equals("add")) {
+                        guildSetting.addAnnouncerRole(rolesByName.get(0));
+                        guildSetting.update();
+                        Utils.reactSuccess(event);
+                    } else if(args[1].equals("remove")) {
+                        guildSetting.removeAnnouncerRole(rolesByName.get(0));
+                        guildSetting.update();
+                        Utils.reactSuccess(event);
+                    } else {
+                        channel.sendMessage("unknown sub-option " + args[1]).queue();
+                    }
+                }
+                break;
+
+            case "roles":
+                if(args.length != 3) {
+                    channel.sendMessage("Invalid number of arguments").queue();
+                    return;
+                }
+                rolesByName = event.getGuild().getRolesByName(args[2], true);
+                if(rolesByName.size() != 1) {
+                    channel.sendMessage("None or too many Roles matching given name").queue();
+                } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
+                    channel.sendMessage("I can not interact with that role!").queue();
+                } else {
+                    if(args[1].equals("add")) {
+                        guildSetting.addAnnouncementRole(rolesByName.get(0));
+                        guildSetting.update();
+                        Utils.reactSuccess(event);
+                    } else if(args[1].equals("remove")) {
+                        guildSetting.removeAnnouncementRole(rolesByName.get(0));
+                        guildSetting.update();
+                        Utils.reactSuccess(event);
+                    } else {
+                        channel.sendMessage("unknown sub-option " + args[1]).queue();
+                    }
+                }
+                break;
+
+            case "enablesub":
+            case "enablesubs":
+            case "enablesubscription":
+            case "enablesubscriptions":
+                if(args.length != 2) {
+                    channel.sendMessage("Invalid number of arguments").queue();
+                    return;
+                }
+                if(args[1].equals("true")) {
+                    guildSetting.setSubscriptionsEnabled(true);
+                    guildSetting.update();
+                    Utils.reactSuccess(event);
+                } else if(args[1].equals("false")) {
+                    guildSetting.setSubscriptionsEnabled(false);
+                    guildSetting.update();
+                    Utils.reactSuccess(event);
+                } else {
+                    channel.sendMessage("unknown sub-option " + args[1]).queue();
+                }
+                break;
+
+            default:
+                channel.sendMessage("Unknown option " + args[0]).queue();
+        }
+    }
+
+    private static String getRoleString(List<Role> roles) {
+        if(roles.isEmpty())
+            return "None";
+        return roles.stream().map(r -> r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining(", "));
+    }
+
+    private static String getAnnouncementText(Role role, String text, User author) {
         return String.format("%s %s\n(announcement by %s)", role.getAsMention(), text, author);
     }
 }

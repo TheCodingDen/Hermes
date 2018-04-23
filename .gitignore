@@ -2,6 +2,7 @@
 ### MainTemplate template
 ### Project specific
 config.json
+guildSettings.json
 logs/
 
 ### IntelliJ project files
