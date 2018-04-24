@@ -8,6 +8,8 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import static com.kantenkugel.tcdannounce.Utils.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -15,8 +17,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Listener extends ListenerAdapter {
-    private static final String HELP_MESSAGE = "This bot is very simple.\nConfigured roles (%s) can make announcements " +
-            "with the `announce` command, and everyone can join/leave announcement roles with the `sub`/`subscribe` command (if enabled).";
+    private static final String HELP_MESSAGE = "This bot only has 4 commands which have to be prefixed with the bot mention:\n" +
+            "`help` - Shows this help message.\n" +
+            "`sub` - Un-/Subscribe an announcment role. Has to be enabled via configuration.\n" +
+            "`announce` - Creates an announcement. Only available to configured roles.\n" +
+            "`config` - Configures roles and subscription. Only available to admins.";
 
     private static final Map<Long, Message> CACHE = new FixedSizeCache<>(5);
     private Pattern selfMentionPattern;
@@ -67,7 +72,7 @@ public class Listener extends ListenerAdapter {
         if(botMsg == null)
             return;
         String[] splits = event.getMessage().getContentRaw().split("\\s*\\|\\s*", 3);
-        botMsg.editMessage(getAnnouncementText(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getAuthor())).queue();
+        botMsg.editMessage(getAnnouncementMessage(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getMember())).queue();
     }
 
     private static void handleHelp(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting) {
@@ -137,7 +142,7 @@ public class Listener extends ListenerAdapter {
             //announce
             role.getManager().setMentionable(true)
                     .queue(v -> {
-                        channel.sendMessage(getAnnouncementText(role, textToSend, event.getAuthor()))
+                        channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
                                 .queue(msg -> {
                                     //cache sent message for future edits
                                     CACHE.put(event.getMessageIdLong(), msg);
@@ -182,6 +187,8 @@ public class Listener extends ListenerAdapter {
             event.getChannel().sendMessage("No (announcement) roles matching "+args[0]+" found!").queue();
         } else if(rolesByName.size() > 1) {
             event.getChannel().sendMessage("Too many announcement roles with this name!").queue();
+        } else if(rolesByName.get(0).isManaged()) {
+            event.getChannel().sendMessage("Can not subscribe to a managed role!").queue();
         } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
             event.getChannel().sendMessage("Can't interact with this role!").queue();
         } else {
@@ -189,11 +196,11 @@ public class Listener extends ListenerAdapter {
             Member member = event.getMember();
             if(member.getRoles().contains(role)) {
                 event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
-                    Utils.reactSuccess(event);
+                    reactSuccess(event);
                 });
             } else {
                 event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
-                    Utils.reactSuccess(event);
+                    reactSuccess(event);
                 });
             }
         }
@@ -208,12 +215,12 @@ public class Listener extends ListenerAdapter {
 
         if(commandSplit.length == 1) {
             channel.sendMessageFormat(
-                    "Current configuration:\n" +
-                            "**Roles with announce permission** (change with `config(ure) announcers add/remove role_name`):\n%s\n" +
-                            "**Announcement roles** (change with `config(ure) roles add/remove role_name`):\n%s\n" +
-                            "**Subscriptions enabled?** (allows `sub(scribe)` command, change with `config(ure) enablesub(scription)s true/false`)\n%s",
-                    getRoleString(guildSetting.getAnnouncerRoles(event.getGuild())),
-                    getRoleString(guildSetting.getAnnouncementRoles(event.getGuild())),
+                    "**Current configuration:**\n" +
+                            "Roles with announce permission (change with `config(ure) announcers add/remove role_name`):\n%s\n\n" +
+                            "Announcement roles (change with `config(ure) roles add/remove role_name`):\n%s\n\n" +
+                            "Subscriptions enabled? (allows `sub(scribe)` command, change with `config(ure) enablesub(scription)s true/false`)\n - %s",
+                    getRoleList(guildSetting.getAnnouncerRoles(event.getGuild())),
+                    getRoleList(guildSetting.getAnnouncementRoles(event.getGuild())),
                     guildSetting.isSubscriptionsEnabled()
             ).queue();
             return;
@@ -235,11 +242,11 @@ public class Listener extends ListenerAdapter {
                     if(args[1].equals("add")) {
                         guildSetting.addAnnouncerRole(rolesByName.get(0));
                         guildSetting.update();
-                        Utils.reactSuccess(event);
+                        reactSuccess(event);
                     } else if(args[1].equals("remove")) {
                         guildSetting.removeAnnouncerRole(rolesByName.get(0));
                         guildSetting.update();
-                        Utils.reactSuccess(event);
+                        reactSuccess(event);
                     } else {
                         channel.sendMessage("unknown sub-option " + args[1]).queue();
                     }
@@ -260,11 +267,11 @@ public class Listener extends ListenerAdapter {
                     if(args[1].equals("add")) {
                         guildSetting.addAnnouncementRole(rolesByName.get(0));
                         guildSetting.update();
-                        Utils.reactSuccess(event);
+                        reactSuccess(event);
                     } else if(args[1].equals("remove")) {
                         guildSetting.removeAnnouncementRole(rolesByName.get(0));
                         guildSetting.update();
-                        Utils.reactSuccess(event);
+                        reactSuccess(event);
                     } else {
                         channel.sendMessage("unknown sub-option " + args[1]).queue();
                     }
@@ -282,11 +289,11 @@ public class Listener extends ListenerAdapter {
                 if(args[1].equals("true")) {
                     guildSetting.setSubscriptionsEnabled(true);
                     guildSetting.update();
-                    Utils.reactSuccess(event);
+                    reactSuccess(event);
                 } else if(args[1].equals("false")) {
                     guildSetting.setSubscriptionsEnabled(false);
                     guildSetting.update();
-                    Utils.reactSuccess(event);
+                    reactSuccess(event);
                 } else {
                     channel.sendMessage("unknown sub-option " + args[1]).queue();
                 }
@@ -295,15 +302,5 @@ public class Listener extends ListenerAdapter {
             default:
                 channel.sendMessage("Unknown option " + args[0]).queue();
         }
-    }
-
-    private static String getRoleString(List<Role> roles) {
-        if(roles.isEmpty())
-            return "None";
-        return roles.stream().map(r -> r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining(", "));
-    }
-
-    private static String getAnnouncementText(Role role, String text, User author) {
-        return String.format("%s %s\n(announcement by %s)", role.getAsMention(), text, author);
     }
 }
