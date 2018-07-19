@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 public class Listener extends ListenerAdapter {
     private static final String HELP_MESSAGE = "This bot only has 4 commands which have to be prefixed with the bot mention:\n" +
             "`help` - Shows this help message.\n" +
-            "`sub` - Un-/Subscribe an announcment role. Has to be enabled via configuration.\n" +
-            "`announce` - Creates an announcement. Only available to configured roles.\n" +
+            "`sub` - Un-/Subscribe an announcement role. Has to be enabled via configuration.\n" +
+            "`announce` - Creates an announcement. Only available to configured roles (%s).\n" +
             "`config` - Configures roles and subscription. Only available to admins.";
 
     private static final Map<Long, Message> CACHE = new FixedSizeCache<>(5);
