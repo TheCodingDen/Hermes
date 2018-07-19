@@ -128,7 +128,7 @@ public class Listener extends ListenerAdapter {
         }
 
         //get and check role to mention
-        List<Role> roles = event.getGuild().getRolesByName(splits[0], true).stream()
+        List<Role> roles = getRolesByName(event.getGuild(), splits[0]).stream()
                 .filter(guildSetting::isAnnouncementRole)
                 .collect(Collectors.toList());
         if(roles.size() == 0) {
@@ -186,11 +186,11 @@ public class Listener extends ListenerAdapter {
 
         String[] args = commandSplit[1].split("\\s+", 2);
         if(args.length == 2) {
-            event.getChannel().sendMessage("Too many arguments!").queue();
+            event.getChannel().sendMessage("Too many arguments! (replace spaces in role names with underscores)").queue();
             return;
         }
 
-        List<Role> rolesByName = event.getGuild().getRolesByName(args[0], true).stream()
+        List<Role> rolesByName = getRolesByName(event.getGuild(), args[0]).stream()
                 .filter(guildSetting::isAnnouncementRole)
                 .collect(Collectors.toList());
         if(rolesByName.size() == 0) {
@@ -217,8 +217,8 @@ public class Listener extends ListenerAdapter {
     }
 
     private static void handleConfiguration(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting, String[] commandSplit) {
-        //admin only
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getAuthor().getIdLong() != 122758889815932930L) //Admin or Kantenkugel
+        //admin only (Kantenkugel is hardcoded as bot admin)
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getAuthor().getIdLong() != 122758889815932930L)
             return;
 
         TextChannel channel = event.getChannel();
@@ -245,7 +245,7 @@ public class Listener extends ListenerAdapter {
                     channel.sendMessage("Invalid number of arguments").queue();
                     return;
                 }
-                rolesByName = event.getGuild().getRolesByName(args[2], true);
+                rolesByName = getRolesByName(event.getGuild(), args[2]);
                 if(rolesByName.size() != 1) {
                     channel.sendMessage("None or too many Roles matching given name").queue();
                 } else {
@@ -268,7 +268,7 @@ public class Listener extends ListenerAdapter {
                     channel.sendMessage("Invalid number of arguments").queue();
                     return;
                 }
-                rolesByName = event.getGuild().getRolesByName(args[2], true);
+                rolesByName = getRolesByName(event.getGuild(), args[2]);
                 if(rolesByName.size() != 1) {
                     channel.sendMessage("None or too many Roles matching given name").queue();
                 } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {

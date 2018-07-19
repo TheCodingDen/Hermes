@@ -3,6 +3,7 @@ package com.kantenkugel.tcdannounce;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
@@ -57,5 +58,12 @@ public class Utils {
                 .setFooter(author.getEffectiveName(), author.getUser().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now());
         return new MessageBuilder(role.getAsMention()).setEmbed(embedBuilder.build()).build();
+    }
+
+    public static List<Role> getRolesByName(Guild guild, String name) {
+        List<Role> rolesByName = guild.getRolesByName(name, true);
+        if(rolesByName.isEmpty() && name.contains("_"))
+            return guild.getRolesByName(name.replace('_', ' '), true);
+        return rolesByName;
     }
 }
