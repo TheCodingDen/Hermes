@@ -140,19 +140,29 @@ public class Listener extends ListenerAdapter {
         } else {
             Role role = roles.get(0);
             //announce
-            role.getManager().setMentionable(true)
-                    .queue(v -> {
-                        channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
-                                .queue(msg -> {
-                                    //cache sent message for future edits
-                                    CACHE.put(event.getMessageIdLong(), msg);
-                                    role.getManager().setMentionable(false).queue();
-                                    if(event.getChannel() != channel)
-                                        event.getChannel().sendMessage("Successfully announced").queue();
-                                }, err -> {
-                                    role.getManager().setMentionable(false).queue();
-                                });
-                    });
+            if(role.isMentionable()) {
+                channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
+                        .queue(msg -> {
+                            //cache sent message for future edits
+                            CACHE.put(event.getMessageIdLong(), msg);
+                            if(event.getChannel() != channel)
+                                event.getChannel().sendMessage("Successfully announced").queue();
+                        });
+            } else {
+                role.getManager().setMentionable(true)
+                        .queue(v -> {
+                            channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
+                                    .queue(msg -> {
+                                        //cache sent message for future edits
+                                        CACHE.put(event.getMessageIdLong(), msg);
+                                        role.getManager().setMentionable(false).queue();
+                                        if(event.getChannel() != channel)
+                                            event.getChannel().sendMessage("Successfully announced").queue();
+                                    }, err -> {
+                                        role.getManager().setMentionable(false).queue();
+                                    });
+                        });
+            }
         }
     }
 
@@ -208,7 +218,7 @@ public class Listener extends ListenerAdapter {
 
     private static void handleConfiguration(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting, String[] commandSplit) {
         //admin only
-        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR))
+        if(!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getAuthor().getIdLong() != 122758889815932930L) //Admin or Kantenkugel
             return;
 
         TextChannel channel = event.getChannel();
