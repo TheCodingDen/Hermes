@@ -206,11 +206,11 @@ public class Listener extends ListenerAdapter {
             Member member = event.getMember();
             if(member.getRoles().contains(role)) {
                 event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
-                    reactSuccess(event);
+                    reactSuccess(event, "Unsubscribed from " + role.getName());
                 });
             } else {
                 event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
-                    reactSuccess(event);
+                    reactSuccess(event, "Subscribed to " + role.getName());
                 });
             }
         }

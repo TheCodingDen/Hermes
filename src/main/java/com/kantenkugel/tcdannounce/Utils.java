@@ -32,11 +32,15 @@ public class Utils {
     }
 
     public static void reactSuccess(GuildMessageReceivedEvent event) {
+        reactSuccess(event, "Done");
+    }
+
+    public static void reactSuccess(GuildMessageReceivedEvent event, String messageContent) {
         boolean canReact = event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MESSAGE_ADD_REACTION);
         if(canReact)
             event.getMessage().addReaction("\u2705").queue();
         else
-            event.getChannel().sendMessage("Done").queue();
+            event.getChannel().sendMessage(messageContent).queue();
     }
 
     public static String getRoleList(List<Role> roles) {
