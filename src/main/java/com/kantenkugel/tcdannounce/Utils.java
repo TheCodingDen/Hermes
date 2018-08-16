@@ -60,6 +60,16 @@ public class Utils {
         return new MessageBuilder(role.getAsMention()).setEmbed(embedBuilder.build()).build();
     }
 
+    public static Role getValidRoleByName(Guild guild, String name) {
+        GuildSettings.GuildSetting guildSetting = GuildSettings.forGuild(guild);
+        List<Role> rolesByName = getRolesByName(guild, name).stream()
+                .filter(guildSetting::isAnnouncementRole)
+                .collect(Collectors.toList());
+        if(rolesByName.isEmpty() || rolesByName.get(0).isManaged() || !guild.getSelfMember().canInteract(rolesByName.get(0)))
+            return null;
+        return rolesByName.get(0);
+    }
+
     public static List<Role> getRolesByName(Guild guild, String name) {
         List<Role> rolesByName = guild.getRolesByName(name, true);
         if(rolesByName.isEmpty() && name.contains("_"))

@@ -10,6 +10,8 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import static com.kantenkugel.tcdannounce.Utils.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -56,6 +58,9 @@ public class Listener extends ListenerAdapter {
                 break;
             case "sub":
             case "subscribe":
+            case "unsub":
+            case "unsubscribe":
+            case "toggle":
                 handleSubscription(event, guildSetting, commandSplit);
                 break;
             case "config":
@@ -184,33 +189,45 @@ public class Listener extends ListenerAdapter {
             return;
         }
 
-        String[] args = commandSplit[1].split("\\s+", 2);
-        if(args.length == 2) {
-            event.getChannel().sendMessage("Too many arguments! (replace spaces in role names with underscores)").queue();
-            return;
+        String[] args = commandSplit[1].split("\\s+");
+
+        List<Role> rolesToToggle = new ArrayList<>(args.length);
+        List<String> unavailableRoles = new ArrayList<>(args.length);
+        for(int i=0; i<args.length; i++) {
+            Role r = getValidRoleByName(event.getGuild(), args[i]);
+            if(r == null)
+                unavailableRoles.add(args[i]);
+            else
+                rolesToToggle.add(r);
         }
 
-        List<Role> rolesByName = getRolesByName(event.getGuild(), args[0]).stream()
-                .filter(guildSetting::isAnnouncementRole)
-                .collect(Collectors.toList());
-        if(rolesByName.size() == 0) {
-            event.getChannel().sendMessage("No (announcement) roles matching "+args[0]+" found!").queue();
-        } else if(rolesByName.size() > 1) {
-            event.getChannel().sendMessage("Too many announcement roles with this name!").queue();
-        } else if(rolesByName.get(0).isManaged()) {
-            event.getChannel().sendMessage("Can not subscribe to a managed role!").queue();
-        } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
-            event.getChannel().sendMessage("Can't interact with this role!").queue();
+        if(!unavailableRoles.isEmpty()) {
+            event.getChannel().sendMessage(String.format("Following role(s) were not found or are not available for subscription:" +
+                            "\n%s\nIf the role you want to subscribe to has spaces in its name, please replace them with underscores.",
+                    String.join(", ", unavailableRoles))).queue();
         } else {
-            Role role = rolesByName.get(0);
             Member member = event.getMember();
-            if(member.getRoles().contains(role)) {
-                event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
-                    reactSuccess(event, "Unsubscribed from " + role.getName());
-                });
+            if(rolesToToggle.size() == 1) {
+                Role role = rolesToToggle.get(0);
+                if(member.getRoles().contains(role)) {
+                    event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
+                        reactSuccess(event, "Unsubscribed from " + role.getName());
+                    });
+                }
+                else {
+                    event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
+                        reactSuccess(event, "Subscribed to " + role.getName());
+                    });
+                }
             } else {
-                event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
-                    reactSuccess(event, "Subscribed to " + role.getName());
+                Map<Boolean, List<Role>> roleTypes = rolesToToggle.stream().collect(Collectors.groupingBy(role -> member.getRoles().contains(role)));
+                event.getGuild().getController().modifyMemberRoles(member,
+                        roleTypes.getOrDefault(false, Collections.emptyList()),
+                        roleTypes.getOrDefault(true, Collections.emptyList())
+                ).queue(v -> {
+                    event.getChannel().sendMessage("Toggled subscriptions of " +
+                            rolesToToggle.stream().map(Role::getName).collect(Collectors.joining(", "))
+                    ).queue();
                 });
             }
         }
@@ -271,7 +288,7 @@ public class Listener extends ListenerAdapter {
                 rolesByName = getRolesByName(event.getGuild(), args[2]);
                 if(rolesByName.size() != 1) {
                     channel.sendMessage("None or too many Roles matching given name").queue();
-                } else if(!event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
+                } else if(rolesByName.get(0).isManaged() || !event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
                     channel.sendMessage("I can not interact with that role!").queue();
                 } else {
                     if(args[1].equals("add")) {
