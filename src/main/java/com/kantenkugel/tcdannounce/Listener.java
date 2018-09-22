@@ -81,8 +81,7 @@ public class Listener extends ListenerAdapter {
     }
 
     private static void handleHelp(GuildMessageReceivedEvent event, GuildSettings.GuildSetting guildSetting) {
-        String help = String.format(HELP_MESSAGE, event.getGuild().getRoles().stream()
-                .filter(guildSetting::isAnnouncerRole)
+        String help = String.format(HELP_MESSAGE, guildSetting.getAnnouncerRoles(event.getGuild()).stream()
                 .map(r -> r.getName().replace("@everyone", "@ everyone"))
                 .collect(Collectors.joining(", "))
         );
@@ -281,6 +280,7 @@ public class Listener extends ListenerAdapter {
                 break;
 
             case "roles":
+            case "role":
                 if(args.length != 3) {
                     channel.sendMessage("Invalid number of arguments").queue();
                     return;

@@ -104,14 +104,7 @@ public class GuildSettings {
         }
 
         public List<Role> getAnnouncerRoles(Guild guild) {
-            List<Role> roles = new ArrayList<>(announcerRoles.size());
-            announcerRoles.forEach(id -> {
-                Role roleById = guild.getRoleById(id);
-                if(roleById != null)
-                    roles.add(roleById);
-                return true;
-            });
-            return roles;
+            return getRoleSublist(guild, announcerRoles);
         }
 
         public boolean isAnnouncementRole(Role role) {
@@ -119,14 +112,7 @@ public class GuildSettings {
         }
 
         public List<Role> getAnnouncementRoles(Guild guild) {
-            List<Role> roles = new ArrayList<>(announcementRoles.size());
-            announcementRoles.forEach(id -> {
-                Role roleById = guild.getRoleById(id);
-                if(roleById != null)
-                    roles.add(roleById);
-                return true;
-            });
-            return roles;
+            return getRoleSublist(guild, announcementRoles);
         }
 
         public boolean isSubscriptionsEnabled() {
@@ -162,6 +148,17 @@ public class GuildSettings {
                     .put("announcerIds", new JSONArray(announcerRoles.toArray()))
                     .put("announcementRoles", new JSONArray(announcementRoles.toArray()))
                     .put("subscriptionsEnabled", subscriptionsEnabled);
+        }
+
+        private static List<Role> getRoleSublist(Guild guild, TLongSet ids) {
+            List<Role> roles = new ArrayList<>(ids.size());
+            ids.forEach(id -> {
+                Role roleById = guild.getRoleById(id);
+                if(roleById != null)
+                    roles.add(roleById);
+                return true;
+            });
+            return roles;
         }
     }
 }
