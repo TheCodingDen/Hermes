@@ -51,11 +51,14 @@ public class Utils {
     }
 
     public static Message getAnnouncementMessage(Role role, String text, Member author) {
+        String avatarUrl = author.getUser().getEffectiveAvatarUrl();
+        if(avatarUrl.endsWith(".gif"))      //force "static" png avatar in footer instead of possibly animated one
+            avatarUrl = avatarUrl.substring(0, avatarUrl.length() - 3) + "png";
         EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setTitle("Announcement")
                 .setDescription(text)
                 .setColor(0xFFFFD0)
-                .setFooter(author.getEffectiveName(), author.getUser().getEffectiveAvatarUrl())
+                .setFooter(author.getEffectiveName(), avatarUrl)
                 .setTimestamp(Instant.now());
         return new MessageBuilder(role.getAsMention()).setEmbed(embedBuilder.build()).build();
     }
