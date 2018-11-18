@@ -16,7 +16,7 @@ public class TCDAnnounce {
                     .setToken(Configs.TOKEN)
                     .setAudioEnabled(false)
                     .setBulkDeleteSplittingEnabled(false)
-                    .addEventListener(new Listener())
+                    .addEventListener(new JoinMessageListener(), new Listener())
                     .build();
         } catch(LoginException e) {
             LOG.error("Error building jda instance", e);
