@@ -20,6 +20,7 @@ public class Listener extends ListenerAdapter {
         registerCommand(new AnnounceCommand());
         registerCommand(new ConfigCommand());
         registerCommand(new HelpCommand());
+        registerCommand(new MentionCommand());
         registerCommand(new SubscriptionCommand());
         this.commands = new HashSet<>(commandMap.values());
     }

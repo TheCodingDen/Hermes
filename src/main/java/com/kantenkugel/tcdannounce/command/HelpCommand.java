@@ -12,6 +12,7 @@ public class HelpCommand implements ICommand {
             "`help` - Shows this help message.\n" +
             "`sub` - Un-/Subscribe an announcement role. Has to be enabled via configuration.\n" +
             "`announce` - Creates an announcement. Only available to configured roles (%s).\n" +
+            "`mention` - Mentions a configured role. Only available to configured roles (see above).\n" +
             "`config` - Configures roles and subscription. Only available to admins.";
 
     @Override
