@@ -2,6 +2,7 @@ package com.kantenkugel.tcdannounce.command;
 
 import com.kantenkugel.common.FixedSizeCache;
 import com.kantenkugel.tcdannounce.GuildSettings;
+import com.kantenkugel.tcdannounce.Utils;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
@@ -25,6 +26,14 @@ public class AnnounceCommand implements ICommand {
         //check if member is allowed to announce based on roles
         if(!settings.isAnnouncer(event.getMember()))
             return;
+
+        //can bot talk in current channel? (important for feedback)
+        if(!event.getChannel().canTalk()) {
+            event.getAuthor().openPrivateChannel().queue(ch -> {
+                ch.sendMessage("Can not send messages in channel "+event.getChannel().getName()).queue();
+            }, err -> {});
+            return;
+        }
 
         //check if bot can manage roles
         if(!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {

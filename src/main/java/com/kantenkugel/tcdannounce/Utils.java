@@ -37,11 +37,30 @@ public class Utils {
     }
 
     public static void reactSuccess(GuildMessageReceivedEvent event, String messageContent) {
+        react(event, "\u2705", messageContent);
+    }
+
+    public static void reactError(GuildMessageReceivedEvent event) {
+        reactError(event, "Something went wrong");
+    }
+
+    public static void reactError(GuildMessageReceivedEvent event, String messageContent) {
+        react(event, "\u274C", messageContent);
+    }
+
+    public static void react(GuildMessageReceivedEvent event, String reaction, String messageContent) {
         boolean canReact = event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MESSAGE_ADD_REACTION);
-        if(canReact)
-            event.getMessage().addReaction("\u2705").queue();
-        else
-            event.getChannel().sendMessage(messageContent).queue();
+        if(canReact)                            //try reacting first
+            event.getMessage().addReaction(reaction).queue();
+        else                                    //try send message in channel/dm
+            sendMessageExhaustive(event, messageContent);
+    }
+
+    public static void sendMessageExhaustive(GuildMessageReceivedEvent event, String message) {
+        if(event.getChannel().canTalk())        //then try message
+            event.getChannel().sendMessage(message).queue();
+        else                                    //lastly, send dm and ignore error
+            event.getAuthor().openPrivateChannel().queue(chan -> chan.sendMessage(message + " (could not react/message in server)").queue(), err -> {});
     }
 
     public static String getRoleList(List<Role> roles) {
@@ -74,6 +93,7 @@ public class Utils {
     }
 
     public static List<Role> getRolesByName(Guild guild, String name) {
+        name = name.trim();
         List<Role> rolesByName = guild.getRolesByName(name, true);
         if(rolesByName.isEmpty() && name.contains("_"))
             return guild.getRolesByName(name.replace('_', ' '), true);
