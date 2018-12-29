@@ -1,6 +1,7 @@
 package com.kantenkugel.tcdannounce.command;
 
-import com.kantenkugel.tcdannounce.GuildSettings;
+import com.kantenkugel.tcdannounce.Utils;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
@@ -12,16 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.kantenkugel.tcdannounce.Utils.getValidRoleByName;
-import static com.kantenkugel.tcdannounce.Utils.reactSuccess;
-
 public class SubscriptionCommand implements ICommand {
     private static final String[] NAMES = {"sub", "subscribe", "unsub", "unsubscribe", "toggle"};
 
     @Override
-    public void handleCommand(GuildMessageReceivedEvent event, GuildSettings.GuildSetting settings, String[] args) {
+    public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String[] args) {
         //abort if subscriptions are not enabled
-        if(!settings.isSubscriptionsEnabled()) {
+        if(!guildConfig.isSubscriptionsEnabled()) {
             event.getChannel().sendMessage("Subscriptions are not enabled for this server").queue();
             return;
         }
@@ -40,7 +38,7 @@ public class SubscriptionCommand implements ICommand {
         List<Role> rolesToToggle = new ArrayList<>(args.length);
         List<String> unavailableRoles = new ArrayList<>(args.length);
         for(int i=0; i<args.length; i++) {
-            Role r = getValidRoleByName(event.getGuild(), args[i]);
+            Role r = Utils.getValidRoleByName(event.getGuild(), guildConfig, args[i]);
             if(r == null)
                 unavailableRoles.add(args[i]);
             else
@@ -57,12 +55,12 @@ public class SubscriptionCommand implements ICommand {
                 Role role = rolesToToggle.get(0);
                 if(member.getRoles().contains(role)) {
                     event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
-                        reactSuccess(event, "Unsubscribed from " + role.getName());
+                        Utils.reactSuccess(event, "Unsubscribed from " + role.getName());
                     });
                 }
                 else {
                     event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
-                        reactSuccess(event, "Subscribed to " + role.getName());
+                        Utils.reactSuccess(event, "Subscribed to " + role.getName());
                     });
                 }
             } else {

@@ -1,5 +1,6 @@
-package com.kantenkugel.tcdannounce;
+package com.kantenkugel.tcdannounce.guildConfig;
 
+import com.kantenkugel.tcdannounce.Utils;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.TLongSet;
@@ -21,39 +22,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-public class GuildSettings {
-    private static final Logger LOG = LoggerFactory.getLogger(GuildSetting.class);
-    private static final Path SETTINGS_PATH = Paths.get("guildSettings.json");
+public class JSONGuildConfigProvider implements IGuildConfigProvider {
+    private static final Logger LOG = LoggerFactory.getLogger(JSONGuildConfigProvider.class);
+    private static final String DEFAULT_CONFIG_PATH = "guildSettings.json";
+    private final Path settingsPath;
 
-    private static final TLongObjectMap<GuildSetting> settings = new TLongObjectHashMap<>(5);
+    private final TLongObjectMap<JSONGuildConfig> settings = new TLongObjectHashMap<>(10);
     //cached json object for easier re-construction on write
-    private static JSONObject settingsObj;
+    private JSONObject settingsObj;
 
-    public static GuildSetting forGuild(Guild guild) {
-        init();
+    @Override
+    public IGuildConfig getConfigForGuild(Guild guild) {
         if(settings.containsKey(guild.getIdLong())) {
             return settings.get(guild.getIdLong());
         } else {
-            GuildSetting guildSetting = new GuildSetting(guild.getIdLong());
-            settings.put(guild.getIdLong(), guildSetting);
-            update(guildSetting);
-            return guildSetting;
+            JSONGuildConfig config = new JSONGuildConfig(guild.getIdLong());
+            settings.put(guild.getIdLong(), config);
+            update(config);
+            return config;
         }
     }
 
-    private static boolean isInitialized = false;
-    private static synchronized void init() {
-        if(isInitialized)
-            return;
-        isInitialized = true;
-
-        if(Files.exists(SETTINGS_PATH)) {
+    public JSONGuildConfigProvider(String filePath) {
+        settingsPath = Paths.get(filePath);
+        if(Files.exists(settingsPath)) {
             try {
-                settingsObj = Utils.readJson(SETTINGS_PATH);
+                settingsObj = Utils.readJson(settingsPath);
                 for(String key : settingsObj.keySet()) {
                     try {
                         long guildId = Long.parseUnsignedLong(key);
-                        GuildSetting setting = new GuildSetting(guildId, settingsObj.getJSONObject(key));
+                        JSONGuildConfig setting = new JSONGuildConfig(guildId, settingsObj.getJSONObject(key));
                         settings.put(guildId, setting);
                     } catch(NumberFormatException ex) {
                         LOG.error("There was a non-id key ({}) in the guild settings file", key, ex);
@@ -69,78 +67,99 @@ public class GuildSettings {
         }
     }
 
-    private static synchronized void update(GuildSetting setting) {
-        settingsObj.put(Long.toUnsignedString(setting.guildId), setting.toJson());
+    public JSONGuildConfigProvider() {
+        this(DEFAULT_CONFIG_PATH);
+    }
+
+    private synchronized void update(JSONGuildConfig config) {
+        settingsObj.put(Long.toUnsignedString(config.guildId), config.toJson());
         try {
-            Utils.writeJson(SETTINGS_PATH, settingsObj);
+            Utils.writeJson(settingsPath, settingsObj);
         } catch(IOException ex) {
             LOG.error("Could not update the guild settings file", ex);
         }
     }
 
-    public static class GuildSetting {
+    public class JSONGuildConfig implements IGuildConfig {
         private final long guildId;
         private TLongSet announcerRoles = new TLongHashSet();
         private TLongSet announcementRoles = new TLongHashSet();
         private boolean subscriptionsEnabled = false;
 
-        private GuildSetting(long guildId) {
+        private JSONGuildConfig(long guildId) {
             this.guildId = guildId;
         }
 
-        private GuildSetting(long guildId, JSONObject settings) {
+        private JSONGuildConfig(long guildId, JSONObject settings) {
             this(guildId);
             announcerRoles.addAll(StreamSupport.stream(settings.getJSONArray("announcerIds").spliterator(), false).mapToLong(e -> (long) e).toArray());
             announcementRoles.addAll(StreamSupport.stream(settings.getJSONArray("announcementRoles").spliterator(), false).mapToLong(e -> (long) e).toArray());
             subscriptionsEnabled = settings.getBoolean("subscriptionsEnabled");
         }
 
+        @Override
+        public long getGuildId() {
+            return guildId;
+        }
+
+        @Override
         public boolean isAnnouncer(Member member) {
             return member.getRoles().stream().anyMatch(this::isAnnouncerRole);
         }
 
+        @Override
         public boolean isAnnouncerRole(Role role) {
             return announcerRoles.contains(role.getIdLong());
         }
 
+        @Override
         public List<Role> getAnnouncerRoles(Guild guild) {
             return getRoleSublist(guild, announcerRoles);
         }
 
+        @Override
         public boolean isAnnouncementRole(Role role) {
             return announcementRoles.contains(role.getIdLong());
         }
 
+        @Override
         public List<Role> getAnnouncementRoles(Guild guild) {
             return getRoleSublist(guild, announcementRoles);
         }
 
+        @Override
         public boolean isSubscriptionsEnabled() {
             return subscriptionsEnabled;
         }
 
+        @Override
         public void addAnnouncerRole(Role r) {
             announcerRoles.add(r.getIdLong());
         }
 
+        @Override
         public void addAnnouncementRole(Role r) {
             announcementRoles.add(r.getIdLong());
         }
 
+        @Override
         public void removeAnnouncerRole(Role r) {
             announcerRoles.remove(r.getIdLong());
         }
 
+        @Override
         public void removeAnnouncementRole(Role r) {
             announcementRoles.remove(r.getIdLong());
         }
 
+        @Override
         public void setSubscriptionsEnabled(boolean subscriptionsEnabled) {
             this.subscriptionsEnabled = subscriptionsEnabled;
         }
 
+        @Override
         public void update() {
-            GuildSettings.update(this);
+            JSONGuildConfigProvider.this.update(this);
         }
 
         private JSONObject toJson() {
@@ -150,7 +169,7 @@ public class GuildSettings {
                     .put("subscriptionsEnabled", subscriptionsEnabled);
         }
 
-        private static List<Role> getRoleSublist(Guild guild, TLongSet ids) {
+        private List<Role> getRoleSublist(Guild guild, TLongSet ids) {
             List<Role> roles = new ArrayList<>(ids.size());
             ids.forEach(id -> {
                 Role roleById = guild.getRoleById(id);
@@ -161,4 +180,5 @@ public class GuildSettings {
             return roles;
         }
     }
+
 }

@@ -1,6 +1,8 @@
 package com.kantenkugel.tcdannounce;
 
 import com.kantenkugel.tcdannounce.command.*;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfigProvider;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -12,11 +14,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Listener extends ListenerAdapter {
+    private final IGuildConfigProvider guildConfigProvider;
     private Map<String, ICommand> commandMap = new HashMap<>();
     private Set<ICommand> commands;
     private Pattern selfMentionPattern;
 
-    public Listener() {
+    public Listener(IGuildConfigProvider guildConfigProvider) {
+        this.guildConfigProvider = guildConfigProvider;
         registerCommand(new AnnounceCommand());
         registerCommand(new ConfigCommand());
         registerCommand(new HelpCommand());
@@ -50,11 +54,11 @@ public class Listener extends ListenerAdapter {
 
         String[] args = argString.split("\\s+", 2);
 
-        GuildSettings.GuildSetting guildSetting = GuildSettings.forGuild(event.getGuild());
+        IGuildConfig guildConfig = guildConfigProvider.getConfigForGuild(event.getGuild());
 
         ICommand command = commandMap.get(args[0].toLowerCase());
         if(command != null)
-            command.handleCommand(event, guildSetting, args.length > 1 ? args[1] : "");
+            command.handleCommand(event, guildConfig, args.length > 1 ? args[1] : "");
     }
 
     @Override

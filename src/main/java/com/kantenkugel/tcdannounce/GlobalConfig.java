@@ -1,5 +1,7 @@
 package com.kantenkugel.tcdannounce;
 
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfigProvider;
+import com.kantenkugel.tcdannounce.guildConfig.JSONGuildConfigProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -11,20 +13,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
-public class Configs {
+public class GlobalConfig {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Configs.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GlobalConfig.class);
 
     //variables are initialized during static class init
     public static final String TOKEN;
 
+    public static final Class<? extends IGuildConfigProvider> GUILD_CONFIG_PROVIDER;
+    public static final String GUILD_CONFIG_PROVIDER_ARGS;
+
     //finals
-    private static final int CONFIG_VERSION = 2;
+    private static final int CONFIG_VERSION = 3;
     private static final Path CONFIG_PATH = Paths.get("config.json");
 
     //static init code
     static {
         String tmpToken = null;
+        Class<? extends IGuildConfigProvider> tmpConfigProvider = JSONGuildConfigProvider.class;
+        String tmpGuildConfigArgs = null;
         if(!Files.exists(CONFIG_PATH)) {
             try {
                 Utils.writeJson(CONFIG_PATH, getDefaultConfig());
@@ -51,7 +58,7 @@ public class Configs {
                             LOG.info("Config file was migrated to a newer version. There were critical changes that require population + restart of the bot");
                             System.exit(0);
                         } else {
-                            LOG.info("Config file was migrated to a newer version. You may look at a later time.");
+                            LOG.info("Config file was migrated to a newer version. You may want to look look at it at a later time.");
                         }
                     } catch(IOException ex) {
                         LOG.error("Could not migrate config file to newer version", ex);
@@ -61,11 +68,33 @@ public class Configs {
                 if(!obj.has("token"))
                     throw new JSONException("The json file was missing a required key. Delete the config file to recreate a new one");
                 tmpToken = obj.getString("token");
+                if(!obj.has("guildConfigProvider")) {
+                    LOG.warn("No guildConfigProvider settings found. Defaulting to JSON");
+                } else {
+                    JSONObject gconf = obj.getJSONObject("guildConfigProvider");
+                    if(!gconf.has("class")) {
+                        LOG.warn("guildConfigProvider.class not found in config... Defaulting to JSON provider");
+                    } else {
+                        try {
+                            Class<?> provider = Class.forName(gconf.getString("class"));
+                            if(IGuildConfigProvider.class.isAssignableFrom(provider))
+                                tmpConfigProvider = ((Class<? extends IGuildConfigProvider>) provider);
+                            else
+                                LOG.warn("guildConfigProvider.class not properly subclassing interface... Defaulting to JSON provider");
+                        } catch(ClassNotFoundException ex) {
+                            LOG.warn("guildConfigProvider.class was not found in classpath... Defaulting to JSON provider");
+                        }
+                    }
+                    if(gconf.has("args"))
+                        tmpGuildConfigArgs = gconf.getString("args");
+                }
             } else {
                 System.exit(1);
             }
         }
         TOKEN = tmpToken;
+        GUILD_CONFIG_PROVIDER = tmpConfigProvider;
+        GUILD_CONFIG_PROVIDER_ARGS = tmpGuildConfigArgs;
     }
 
     /**
@@ -103,6 +132,8 @@ public class Configs {
         switch(currVersion) {
             case 1:
                 config.remove("allowedIds");
+            case 2:
+                config.put("guildConfigProvider", getDefaultConfig().getJSONObject("guildConfigProvider"));
             default:
                 config.put("version", CONFIG_VERSION);
         }
@@ -112,7 +143,11 @@ public class Configs {
     private static JSONObject getDefaultConfig() {
         return new JSONObject()
                 .put("token", "")
-                .put("version", CONFIG_VERSION);
+                .put("version", CONFIG_VERSION)
+                .put("guildConfigProvider", new JSONObject()
+                        .put("class", "com.kantenkugel.tcdannounce.guildConfig.JSONGuildConfigProvider")
+                        .put("args", "guildSettings.json")
+                );
     }
 
 }

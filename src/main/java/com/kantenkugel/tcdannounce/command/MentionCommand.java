@@ -1,7 +1,7 @@
 package com.kantenkugel.tcdannounce.command;
 
-import com.kantenkugel.tcdannounce.GuildSettings;
 import com.kantenkugel.tcdannounce.Utils;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -9,15 +9,13 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.kantenkugel.tcdannounce.Utils.getRolesByName;
-
 public class MentionCommand implements ICommand {
     private static final String[] NAMES = {"mention", "ping"};
 
     @Override
-    public void handleCommand(GuildMessageReceivedEvent event, GuildSettings.GuildSetting settings, String args) {
+    public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String args) {
         //check if member is allowed to announce based on roles
-        if(!settings.isAnnouncer(event.getMember()))
+        if(!guildConfig.isAnnouncer(event.getMember()))
             return;
 
         //can bot talk in current channel? (important for feedback)
@@ -33,8 +31,8 @@ public class MentionCommand implements ICommand {
         }
 
         //get and check role to mention
-        List<Role> roles = getRolesByName(event.getGuild(), args).stream()
-                .filter(settings::isAnnouncementRole)
+        List<Role> roles = Utils.getRolesByName(event.getGuild(), args).stream()
+                .filter(guildConfig::isAnnouncementRole)
                 .collect(Collectors.toList());
         if(roles.size() == 0) {
             event.getChannel().sendMessage("No (announcement) roles matching "+args.trim()+" found!").queue();

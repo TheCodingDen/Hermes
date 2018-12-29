@@ -1,6 +1,7 @@
 package com.kantenkugel.tcdannounce.command;
 
-import com.kantenkugel.tcdannounce.GuildSettings;
+import com.kantenkugel.tcdannounce.Utils;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -8,15 +9,11 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.List;
 
-import static com.kantenkugel.tcdannounce.Utils.getRoleList;
-import static com.kantenkugel.tcdannounce.Utils.getRolesByName;
-import static com.kantenkugel.tcdannounce.Utils.reactSuccess;
-
 public class ConfigCommand implements ICommand {
     private static final String[] NAMES = {"config", "configure"};
 
     @Override
-    public void handleCommand(GuildMessageReceivedEvent event, GuildSettings.GuildSetting settings, String[] args) {
+    public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String[] args) {
         //admin only (Kantenkugel is hardcoded as bot admin)
         if(!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getAuthor().getIdLong() != 122758889815932930L)
             return;
@@ -29,9 +26,9 @@ public class ConfigCommand implements ICommand {
                             "Roles with announce permission (change with `config(ure) announcers add/remove role_name`):\n%s\n\n" +
                             "Announcement roles (change with `config(ure) roles add/remove role_name`):\n%s\n\n" +
                             "Subscriptions enabled? (allows `sub(scribe)` command, change with `config(ure) enablesub(scription)s true/false`)\n - %s",
-                    getRoleList(settings.getAnnouncerRoles(event.getGuild())),
-                    getRoleList(settings.getAnnouncementRoles(event.getGuild())),
-                    settings.isSubscriptionsEnabled()
+                    Utils.getRoleList(guildConfig.getAnnouncerRoles(event.getGuild())),
+                    Utils.getRoleList(guildConfig.getAnnouncementRoles(event.getGuild())),
+                    guildConfig.isSubscriptionsEnabled()
             ).queue();
             return;
         }
@@ -45,18 +42,18 @@ public class ConfigCommand implements ICommand {
                     channel.sendMessage("Invalid number of arguments").queue();
                     return;
                 }
-                rolesByName = getRolesByName(event.getGuild(), args[2]);
+                rolesByName = Utils.getRolesByName(event.getGuild(), args[2]);
                 if(rolesByName.size() != 1) {
                     channel.sendMessage("None or too many Roles matching given name").queue();
                 } else {
                     if(args[1].equals("add")) {
-                        settings.addAnnouncerRole(rolesByName.get(0));
-                        settings.update();
-                        reactSuccess(event);
+                        guildConfig.addAnnouncerRole(rolesByName.get(0));
+                        guildConfig.update();
+                        Utils.reactSuccess(event);
                     } else if(args[1].equals("remove")) {
-                        settings.removeAnnouncerRole(rolesByName.get(0));
-                        settings.update();
-                        reactSuccess(event);
+                        guildConfig.removeAnnouncerRole(rolesByName.get(0));
+                        guildConfig.update();
+                        Utils.reactSuccess(event);
                     } else {
                         channel.sendMessage("unknown sub-option " + args[1]).queue();
                     }
@@ -69,20 +66,20 @@ public class ConfigCommand implements ICommand {
                     channel.sendMessage("Invalid number of arguments").queue();
                     return;
                 }
-                rolesByName = getRolesByName(event.getGuild(), args[2]);
+                rolesByName = Utils.getRolesByName(event.getGuild(), args[2]);
                 if(rolesByName.size() != 1) {
                     channel.sendMessage("None or too many Roles matching given name").queue();
                 } else if(rolesByName.get(0).isManaged() || !event.getGuild().getSelfMember().canInteract(rolesByName.get(0))) {
                     channel.sendMessage("I can not interact with that role!").queue();
                 } else {
                     if(args[1].equals("add")) {
-                        settings.addAnnouncementRole(rolesByName.get(0));
-                        settings.update();
-                        reactSuccess(event);
+                        guildConfig.addAnnouncementRole(rolesByName.get(0));
+                        guildConfig.update();
+                        Utils.reactSuccess(event);
                     } else if(args[1].equals("remove")) {
-                        settings.removeAnnouncementRole(rolesByName.get(0));
-                        settings.update();
-                        reactSuccess(event);
+                        guildConfig.removeAnnouncementRole(rolesByName.get(0));
+                        guildConfig.update();
+                        Utils.reactSuccess(event);
                     } else {
                         channel.sendMessage("unknown sub-option " + args[1]).queue();
                     }
@@ -98,13 +95,13 @@ public class ConfigCommand implements ICommand {
                     return;
                 }
                 if(args[1].equals("true")) {
-                    settings.setSubscriptionsEnabled(true);
-                    settings.update();
-                    reactSuccess(event);
+                    guildConfig.setSubscriptionsEnabled(true);
+                    guildConfig.update();
+                    Utils.reactSuccess(event);
                 } else if(args[1].equals("false")) {
-                    settings.setSubscriptionsEnabled(false);
-                    settings.update();
-                    reactSuccess(event);
+                    guildConfig.setSubscriptionsEnabled(false);
+                    guildConfig.update();
+                    Utils.reactSuccess(event);
                 } else {
                     channel.sendMessage("unknown sub-option " + args[1]).queue();
                 }

@@ -1,8 +1,8 @@
 package com.kantenkugel.tcdannounce.command;
 
 import com.kantenkugel.common.FixedSizeCache;
-import com.kantenkugel.tcdannounce.GuildSettings;
 import com.kantenkugel.tcdannounce.Utils;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
@@ -14,17 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.kantenkugel.tcdannounce.Utils.getAnnouncementMessage;
-import static com.kantenkugel.tcdannounce.Utils.getRolesByName;
-
 public class AnnounceCommand implements ICommand {
     private static final String[] NAMES = {"announce"};
     private static final Map<Long, Message> CACHE = new FixedSizeCache<>(5);
 
     @Override
-    public void handleCommand(GuildMessageReceivedEvent event, GuildSettings.GuildSetting settings, String args) {
+    public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String args) {
         //check if member is allowed to announce based on roles
-        if(!settings.isAnnouncer(event.getMember()))
+        if(!guildConfig.isAnnouncer(event.getMember()))
             return;
 
         //can bot talk in current channel? (important for feedback)
@@ -70,8 +67,8 @@ public class AnnounceCommand implements ICommand {
         }
 
         //get and check role to mention
-        List<Role> roles = getRolesByName(event.getGuild(), splits[0]).stream()
-                .filter(settings::isAnnouncementRole)
+        List<Role> roles = Utils.getRolesByName(event.getGuild(), splits[0]).stream()
+                .filter(guildConfig::isAnnouncementRole)
                 .collect(Collectors.toList());
         if(roles.size() == 0) {
             event.getChannel().sendMessage("No (announcement) roles matching "+splits[0].trim()+" found!").queue();
@@ -83,7 +80,7 @@ public class AnnounceCommand implements ICommand {
             Role role = roles.get(0);
             //announce
             if(role.isMentionable()) {
-                channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
+                channel.sendMessage(Utils.getAnnouncementMessage(role, textToSend, event.getMember()))
                         .queue(msg -> {
                             //cache sent message for future edits
                             CACHE.put(event.getMessageIdLong(), msg);
@@ -93,7 +90,7 @@ public class AnnounceCommand implements ICommand {
             } else {
                 role.getManager().setMentionable(true)
                         .queue(v -> {
-                            channel.sendMessage(getAnnouncementMessage(role, textToSend, event.getMember()))
+                            channel.sendMessage(Utils.getAnnouncementMessage(role, textToSend, event.getMember()))
                                     .queue(msg -> {
                                         //cache sent message for future edits
                                         CACHE.put(event.getMessageIdLong(), msg);
@@ -115,7 +112,7 @@ public class AnnounceCommand implements ICommand {
         if(botMsg == null)
             return;
         String[] splits = event.getMessage().getContentRaw().split("\\s*\\|\\s*", 3);
-        botMsg.editMessage(getAnnouncementMessage(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getMember())).queue();
+        botMsg.editMessage(Utils.getAnnouncementMessage(botMsg.getMentionedRoles().get(0), splits[splits.length-1].trim(), event.getMember())).queue();
     }
 
     @Override

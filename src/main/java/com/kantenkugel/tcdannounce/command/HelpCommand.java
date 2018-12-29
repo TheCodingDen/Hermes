@@ -1,6 +1,6 @@
 package com.kantenkugel.tcdannounce.command;
 
-import com.kantenkugel.tcdannounce.GuildSettings;
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.stream.Collectors;
@@ -16,8 +16,8 @@ public class HelpCommand implements ICommand {
             "`config` - Configures roles and subscription. Only available to admins.";
 
     @Override
-    public void handleCommand(GuildMessageReceivedEvent event, GuildSettings.GuildSetting settings, String[] args) {
-        String help = String.format(HELP_MESSAGE, settings.getAnnouncerRoles(event.getGuild()).stream()
+    public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String[] args) {
+        String help = String.format(HELP_MESSAGE, guildConfig.getAnnouncerRoles(event.getGuild()).stream()
                 .map(r -> r.getName().replace("@everyone", "@ everyone"))
                 .collect(Collectors.joining(", "))
         );

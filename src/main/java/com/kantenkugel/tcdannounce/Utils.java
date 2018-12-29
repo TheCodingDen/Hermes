@@ -1,5 +1,6 @@
 package com.kantenkugel.tcdannounce;
 
+import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -82,10 +83,9 @@ public class Utils {
         return new MessageBuilder(role.getAsMention()).setEmbed(embedBuilder.build()).build();
     }
 
-    public static Role getValidRoleByName(Guild guild, String name) {
-        GuildSettings.GuildSetting guildSetting = GuildSettings.forGuild(guild);
+    public static Role getValidRoleByName(Guild guild, IGuildConfig guildConfig, String name) {
         List<Role> rolesByName = getRolesByName(guild, name).stream()
-                .filter(guildSetting::isAnnouncementRole)
+                .filter(guildConfig::isAnnouncementRole)
                 .collect(Collectors.toList());
         if(rolesByName.isEmpty() || rolesByName.get(0).isManaged() || !guild.getSelfMember().canInteract(rolesByName.get(0)))
             return null;
