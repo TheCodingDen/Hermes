@@ -54,11 +54,11 @@ public class Listener extends ListenerAdapter {
 
         String[] args = argString.split("\\s+", 2);
 
-        IGuildConfig guildConfig = guildConfigProvider.getConfigForGuild(event.getGuild());
-
         ICommand command = commandMap.get(args[0].toLowerCase());
-        if(command != null)
+        if(command != null) {
+            IGuildConfig guildConfig = guildConfigProvider.getConfigForGuild(event.getGuild());
             command.handleCommand(event, guildConfig, args.length > 1 ? args[1] : "");
+        }
     }
 
     @Override

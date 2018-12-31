@@ -20,6 +20,9 @@ dependencies {
 
     //Logback
     compile 'ch.qos.logback:logback-classic:1.2.3'
+    
+    //PGSQL JDBC driver
+    compile 'org.postgresql:postgresql:42.2.5'
 }
 
 compileJava.options.encoding = 'UTF-8'

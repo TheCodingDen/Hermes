@@ -145,7 +145,7 @@ public class GlobalConfig {
                 .put("token", "")
                 .put("version", CONFIG_VERSION)
                 .put("guildConfigProvider", new JSONObject()
-                        .put("class", "com.kantenkugel.tcdannounce.guildConfig.JSONGuildConfigProvider")
+                        .put("class", JSONGuildConfigProvider.class.getName())
                         .put("args", "guildSettings.json")
                 );
     }
