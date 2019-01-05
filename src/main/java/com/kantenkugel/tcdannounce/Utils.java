@@ -67,7 +67,10 @@ public class Utils {
     public static String getRoleList(List<Role> roles) {
         if(roles.isEmpty())
             return " - *None*";
-        return roles.stream().map(r -> " - " + r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining("\n"));
+        if(roles.size() > 5)
+            return " - " + roles.stream().map(r -> r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining(", "));
+        else
+            return roles.stream().map(r -> " - " + r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining("\n"));
     }
 
     public static Message getAnnouncementMessage(Role role, String text, Member author) {
