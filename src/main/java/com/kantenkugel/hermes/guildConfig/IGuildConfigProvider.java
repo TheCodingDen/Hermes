@@ -1,4 +1,4 @@
-package com.kantenkugel.tcdannounce.guildConfig;
+package com.kantenkugel.hermes.guildConfig;
 
 import net.dv8tion.jda.core.entities.Guild;
 import org.jetbrains.annotations.NotNull;

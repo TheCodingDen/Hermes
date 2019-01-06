@@ -1,6 +1,6 @@
-package com.kantenkugel.tcdannounce.command;
+package com.kantenkugel.hermes.command;
 
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
+import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.stream.Collectors;
@@ -9,11 +9,11 @@ public class HelpCommand implements ICommand {
     private static final String[] NAMES = {"help"};
 
     private static final String HELP_MESSAGE = "This bot only has 4 commands which have to be prefixed with the bot mention:\n" +
-            "`help` - Shows this help message.\n" +
-            "`sub` - Un-/Subscribe an announcement role. Has to be enabled via configuration.\n" +
             "`announce` - Creates an announcement. Only available to configured roles (%s).\n" +
+            "`config` - Configures roles and subscription. Only available to admins.\n" +
+            "`help` - Shows this help message.\n" +
             "`mention` - Mentions a configured role. Only available to configured roles (see above).\n" +
-            "`config` - Configures roles and subscription. Only available to admins.";
+            "`sub` - Un-/Subscribe an announcement role. Has to be enabled via configuration.\n";
 
     @Override
     public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String[] args) {

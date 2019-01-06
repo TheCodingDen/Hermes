@@ -1,7 +1,7 @@
-package com.kantenkugel.tcdannounce;
+package com.kantenkugel.hermes;
 
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfigProvider;
-import com.kantenkugel.tcdannounce.guildConfig.JSONGuildConfigProvider;
+import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
+import com.kantenkugel.hermes.guildConfig.JSONGuildConfigProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;

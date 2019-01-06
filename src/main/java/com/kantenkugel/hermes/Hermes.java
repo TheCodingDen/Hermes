@@ -1,7 +1,7 @@
-package com.kantenkugel.tcdannounce;
+package com.kantenkugel.hermes;
 
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfigProvider;
+import com.kantenkugel.hermes.guildConfig.IGuildConfig;
+import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import org.json.JSONObject;
@@ -14,8 +14,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class TCDAnnounce {
-    public static final Logger LOG = LoggerFactory.getLogger(TCDAnnounce.class);
+public class Hermes {
+    public static final Logger LOG = LoggerFactory.getLogger(Hermes.class);
 
     public static void main(String[] args) {
         if(handleArgs(args))

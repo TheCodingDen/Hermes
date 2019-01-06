@@ -1,8 +1,8 @@
-package com.kantenkugel.tcdannounce;
+package com.kantenkugel.hermes;
 
-import com.kantenkugel.tcdannounce.command.*;
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfigProvider;
+import com.kantenkugel.hermes.command.*;
+import com.kantenkugel.hermes.guildConfig.IGuildConfig;
+import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -33,7 +33,7 @@ public class Listener extends ListenerAdapter {
     public void onReady(ReadyEvent event) {
         String inviteUrl = event.getJDA().asBot().getInviteUrl(Permission.MANAGE_ROLES);
         selfMentionPattern = Pattern.compile("^<@!?"+Pattern.quote(event.getJDA().getSelfUser().getId())+">\\s*");
-        TCDAnnounce.LOG.info("Bot is ready. Use following link to invite to servers: {}", inviteUrl);
+        Hermes.LOG.info("Bot is ready. Use following link to invite to servers: {}", inviteUrl);
     }
 
     @Override

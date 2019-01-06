@@ -1,4 +1,4 @@
-package com.kantenkugel.tcdannounce.guildConfig;
+package com.kantenkugel.hermes.guildConfig;
 
 import gnu.trove.set.TLongSet;
 import net.dv8tion.jda.core.entities.Guild;

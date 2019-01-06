@@ -4,7 +4,7 @@ plugins {
     id'com.github.johnrengelman.shadow' version '2.0.2'
 }
 
-mainClassName = 'com.kantenkugel.tcdannounce.TCDAnnounce'
+mainClassName = 'com.kantenkugel.hermes.Hermes'
 
 version '1.0'
 

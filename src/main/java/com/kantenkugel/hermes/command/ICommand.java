@@ -1,6 +1,6 @@
-package com.kantenkugel.tcdannounce.command;
+package com.kantenkugel.hermes.command;
 
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
+import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent;
 import org.slf4j.LoggerFactory;

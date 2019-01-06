@@ -1,6 +1,6 @@
-package com.kantenkugel.tcdannounce.guildConfig;
+package com.kantenkugel.hermes.guildConfig;
 
-import com.kantenkugel.tcdannounce.Utils;
+import com.kantenkugel.hermes.Utils;
 import gnu.trove.set.hash.TLongHashSet;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;

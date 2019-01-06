@@ -1,6 +1,6 @@
-package com.kantenkugel.tcdannounce;
+package com.kantenkugel.hermes;
 
-import com.kantenkugel.tcdannounce.guildConfig.IGuildConfig;
+import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;

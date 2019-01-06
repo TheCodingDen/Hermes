@@ -1,4 +1,4 @@
-package com.kantenkugel.tcdannounce.guildConfig;
+package com.kantenkugel.hermes.guildConfig;
 
 import com.kantenkugel.common.FixedSizeCache;
 import gnu.trove.set.TLongSet;

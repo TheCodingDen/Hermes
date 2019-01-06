@@ -1,4 +1,4 @@
-package com.kantenkugel.tcdannounce.guildConfig;
+package com.kantenkugel.hermes.guildConfig;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
