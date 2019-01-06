@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
+/**
+ * Persistence entrypoint used to retrieve {@link IGuildConfig} instances.
+ */
 public interface IGuildConfigProvider {
 
     /**

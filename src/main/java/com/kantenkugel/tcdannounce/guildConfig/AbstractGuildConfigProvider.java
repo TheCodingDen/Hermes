@@ -3,7 +3,6 @@ package com.kantenkugel.tcdannounce.guildConfig;
 import com.kantenkugel.common.FixedSizeCache;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,26 +64,23 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
         }
 
         @Override
-        public boolean isAnnouncer(Member member) {
-            return member.getRoles().stream().anyMatch(this::isAnnouncerRole);
-        }
-
-        @Override
-        public boolean isAnnouncerRole(Role role) {
+        public boolean isAnnouncerRole(@NotNull Role role) {
             return announcerRoles.contains(role.getIdLong());
         }
 
         @Override
+        @NotNull
         public TLongSet getAnnouncerRoleIds() {
             return announcerRoles;
         }
 
         @Override
-        public boolean isAnnouncementRole(Role role) {
+        public boolean isAnnouncementRole(@NotNull Role role) {
             return announcementRoles.contains(role.getIdLong());
         }
 
         @Override
+        @NotNull
         public TLongSet getAnnouncementRoleIds() {
             return announcementRoles;
         }
@@ -95,22 +91,22 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
         }
 
         @Override
-        public void addAnnouncerRole(Role r) {
+        public void addAnnouncerRole(@NotNull Role r) {
             announcerRoles.add(r.getIdLong());
         }
 
         @Override
-        public void addAnnouncementRole(Role r) {
+        public void addAnnouncementRole(@NotNull Role r) {
             announcementRoles.add(r.getIdLong());
         }
 
         @Override
-        public void removeAnnouncerRole(Role r) {
+        public void removeAnnouncerRole(@NotNull Role r) {
             announcerRoles.remove(r.getIdLong());
         }
 
         @Override
-        public void removeAnnouncementRole(Role r) {
+        public void removeAnnouncementRole(@NotNull Role r) {
             announcementRoles.remove(r.getIdLong());
         }
 
@@ -120,7 +116,7 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
         }
 
         @Override
-        public void copyFromConfig(IGuildConfig other) {
+        public void copyFromConfig(@NotNull IGuildConfig other) {
             this.announcerRoles.clear();
             this.announcerRoles.addAll(other.getAnnouncerRoleIds());
 
