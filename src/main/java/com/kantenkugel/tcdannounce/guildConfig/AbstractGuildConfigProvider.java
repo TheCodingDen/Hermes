@@ -3,7 +3,6 @@ package com.kantenkugel.tcdannounce.guildConfig;
 import com.kantenkugel.common.FixedSizeCache;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 import org.jetbrains.annotations.NotNull;
@@ -29,8 +28,7 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
     }
 
     @Override
-    public @NotNull IGuildConfig getConfigForGuild(Guild g) {
-        long id = g.getIdLong();
+    public @NotNull IGuildConfig getConfigForGuild(long id) {
         if(configCache == null) {
             T config = getConfig(id);
             return config == null ? createConfig(id) : config;
@@ -77,8 +75,8 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
         }
 
         @Override
-        public List<Role> getAnnouncerRoles(Guild guild) {
-            return getRoleSublist(guild, announcerRoles);
+        public TLongSet getAnnouncerRoleIds() {
+            return announcerRoles;
         }
 
         @Override
@@ -87,8 +85,8 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
         }
 
         @Override
-        public List<Role> getAnnouncementRoles(Guild guild) {
-            return getRoleSublist(guild, announcementRoles);
+        public TLongSet getAnnouncementRoleIds() {
+            return announcementRoles;
         }
 
         @Override
@@ -121,15 +119,15 @@ public abstract class AbstractGuildConfigProvider<T extends IGuildConfig> implem
             this.subscriptionsEnabled = subscriptionsEnabled;
         }
 
-        private static List<Role> getRoleSublist(Guild guild, TLongSet ids) {
-            List<Role> roles = new ArrayList<>(ids.size());
-            ids.forEach(id -> {
-                Role roleById = guild.getRoleById(id);
-                if(roleById != null)
-                    roles.add(roleById);
-                return true;
-            });
-            return roles;
+        @Override
+        public void copyFromConfig(IGuildConfig other) {
+            this.announcerRoles.clear();
+            this.announcerRoles.addAll(other.getAnnouncerRoleIds());
+
+            this.announcementRoles.clear();
+            this.announcementRoles.addAll(other.getAnnouncementRoleIds());
+
+            this.subscriptionsEnabled = other.isSubscriptionsEnabled();
         }
     }
 

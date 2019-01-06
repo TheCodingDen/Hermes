@@ -25,7 +25,7 @@ public class GlobalConfig {
 
     //finals
     private static final int CONFIG_VERSION = 3;
-    private static final Path CONFIG_PATH = Paths.get("config.json");
+    static final Path CONFIG_PATH = Paths.get("config.json");
 
     //static init code
     static {

@@ -20,7 +20,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Utils {
     public static JSONObject readJson(Path path) throws IOException {
@@ -64,13 +66,14 @@ public class Utils {
             event.getAuthor().openPrivateChannel().queue(chan -> chan.sendMessage(message + " (could not react/message in server)").queue(), err -> {});
     }
 
-    public static String getRoleList(List<Role> roles) {
+    public static String getRoleList(Set<Role> roles) {
         if(roles.isEmpty())
             return " - *None*";
+        Stream<String> roleNameStream = roles.stream().map(r -> r.getName().replace("@everyone", "@ everyone")).sorted();
         if(roles.size() > 5)
-            return " - " + roles.stream().map(r -> r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining(", "));
+            return " - " + roleNameStream.collect(Collectors.joining(", "));
         else
-            return roles.stream().map(r -> " - " + r.getName().replace("@everyone", "@ everyone")).collect(Collectors.joining("\n"));
+            return roleNameStream.map(name -> " - " + name).collect(Collectors.joining("\n"));
     }
 
     public static Message getAnnouncementMessage(Role role, String text, Member author) {

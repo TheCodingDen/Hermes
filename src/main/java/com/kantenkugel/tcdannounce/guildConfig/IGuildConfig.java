@@ -1,10 +1,13 @@
 package com.kantenkugel.tcdannounce.guildConfig;
 
+import gnu.trove.set.TLongSet;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface IGuildConfig {
     long getGuildId();
@@ -13,11 +16,19 @@ public interface IGuildConfig {
 
     boolean isAnnouncerRole(Role role);
 
-    List<Role> getAnnouncerRoles(Guild guild);
+    default Set<Role> getAnnouncerRoles(Guild guild) {
+        return Arrays.stream(getAnnouncerRoleIds().toArray()).mapToObj(guild::getRoleById).collect(Collectors.toSet());
+    }
+
+    TLongSet getAnnouncerRoleIds();
 
     boolean isAnnouncementRole(Role role);
 
-    List<Role> getAnnouncementRoles(Guild guild);
+    default Set<Role> getAnnouncementRoles(Guild guild) {
+        return Arrays.stream(getAnnouncementRoleIds().toArray()).mapToObj(guild::getRoleById).collect(Collectors.toSet());
+    }
+
+    TLongSet getAnnouncementRoleIds();
 
     boolean isSubscriptionsEnabled();
 
@@ -32,4 +43,6 @@ public interface IGuildConfig {
     void setSubscriptionsEnabled(boolean subscriptionsEnabled);
 
     void update();
+
+    void copyFromConfig(IGuildConfig other);
 }
