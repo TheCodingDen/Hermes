@@ -1,9 +1,9 @@
 package com.kantenkugel.hermes.guildConfig;
 
 import gnu.trove.set.TLongSet;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;

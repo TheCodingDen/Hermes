@@ -3,11 +3,11 @@ package com.kantenkugel.hermes;
 import com.kantenkugel.hermes.command.*;
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -31,7 +31,7 @@ public class Listener extends ListenerAdapter {
 
     @Override
     public void onReady(ReadyEvent event) {
-        String inviteUrl = event.getJDA().asBot().getInviteUrl(Permission.MANAGE_ROLES);
+        String inviteUrl = event.getJDA().getInviteUrl(Permission.MANAGE_ROLES);
         selfMentionPattern = Pattern.compile("^<@!?"+Pattern.quote(event.getJDA().getSelfUser().getId())+">\\s*");
         Hermes.LOG.info("Bot is ready. Use following link to invite to servers: {}", inviteUrl);
     }

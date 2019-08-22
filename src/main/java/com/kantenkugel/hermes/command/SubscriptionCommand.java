@@ -2,10 +2,10 @@ package com.kantenkugel.hermes.command;
 
 import com.kantenkugel.hermes.Utils;
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,18 +54,18 @@ public class SubscriptionCommand implements ICommand {
             if(rolesToToggle.size() == 1) {
                 Role role = rolesToToggle.get(0);
                 if(member.getRoles().contains(role)) {
-                    event.getGuild().getController().removeSingleRoleFromMember(member, role).reason("Subscription").queue(v -> {
+                    event.getGuild().removeRoleFromMember(member, role).reason("Subscription").queue(v -> {
                         Utils.reactSuccess(event, "Unsubscribed from " + role.getName());
                     });
                 }
                 else {
-                    event.getGuild().getController().addSingleRoleToMember(member, role).reason("Subscription").queue(v -> {
+                    event.getGuild().addRoleToMember(member, role).reason("Subscription").queue(v -> {
                         Utils.reactSuccess(event, "Subscribed to " + role.getName());
                     });
                 }
             } else {
                 Map<Boolean, List<Role>> roleTypes = rolesToToggle.stream().collect(Collectors.groupingBy(role -> member.getRoles().contains(role)));
-                event.getGuild().getController().modifyMemberRoles(member,
+                event.getGuild().modifyMemberRoles(member,
                         roleTypes.getOrDefault(false, Collections.emptyList()),
                         roleTypes.getOrDefault(true, Collections.emptyList())
                 ).queue(v -> {

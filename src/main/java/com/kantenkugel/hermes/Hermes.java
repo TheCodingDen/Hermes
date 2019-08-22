@@ -2,8 +2,7 @@ package com.kantenkugel.hermes;
 
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.api.JDABuilder;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +24,9 @@ public class Hermes {
                 GlobalConfig.GUILD_CONFIG_PROVIDER_ARGS);
 
         try {
-            new JDABuilder(AccountType.BOT)
-                    .setToken(GlobalConfig.TOKEN)
-                    .setAudioEnabled(false)
+            new JDABuilder(GlobalConfig.TOKEN)
                     .setBulkDeleteSplittingEnabled(false)
-                    .addEventListener(new Listener(guildConfigProvider))
+                    .addEventListeners(new Listener(guildConfigProvider))
                     .build();
         } catch(LoginException e) {
             LOG.error("Error building jda instance", e);

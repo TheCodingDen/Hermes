@@ -3,7 +3,7 @@ package com.kantenkugel.hermes.guildConfig;
 import com.kantenkugel.common.FixedSizeCache;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.api.entities.Role;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
