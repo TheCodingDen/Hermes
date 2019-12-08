@@ -3,6 +3,7 @@ package com.kantenkugel.hermes;
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,8 @@ public class Hermes {
         try {
             new JDABuilder(GlobalConfig.TOKEN)
                     .setBulkDeleteSplittingEnabled(false)
+                    .setDisabledCacheFlags(EnumSet.allOf(CacheFlag.class))
+                    .setGuildSubscriptionsEnabled(false)
                     .addEventListeners(new Listener(guildConfigProvider))
                     .build();
         } catch(LoginException e) {
