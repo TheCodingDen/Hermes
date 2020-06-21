@@ -25,8 +25,9 @@ public class MentionCommand implements ICommand {
         }
 
         //check if bot can manage roles
-        if(!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
-            event.getChannel().sendMessage("Missing MANAGE_ROLES permission!").queue();
+        if(!event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MESSAGE_MENTION_EVERYONE) &&
+                !event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MANAGE_ROLES)) {
+            event.getChannel().sendMessage("Missing MANAGE_ROLES or MENTION_EVERYONE permission!").queue();
             return;
         }
 
@@ -49,12 +50,12 @@ public class MentionCommand implements ICommand {
                 else
                     mentionText = "^ " + role.getAsMention();
                 //announce
-                if(role.isMentionable()) {
-                    event.getChannel().sendMessage(mentionText).queue(msg -> event.getMessage().delete().queue(null, err -> {}));
+                if(role.isMentionable() || event.getGuild().getSelfMember().hasPermission(event.getChannel(), Permission.MESSAGE_MENTION_EVERYONE)) {
+                    event.getChannel().sendMessage(mentionText).mention(role).queue(msg -> event.getMessage().delete().queue(null, err -> {}));
                 } else {
                     role.getManager().setMentionable(true)
                             .queue(v ->
-                                    event.getChannel().sendMessage(mentionText).queue(
+                                    event.getChannel().sendMessage(mentionText).mention(role).queue(
                                             msg -> {
                                                 role.getManager().setMentionable(false).queue();
                                                 event.getMessage().delete().queue(null, err -> {});

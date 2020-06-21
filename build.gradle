@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     //JDA
-    compile 'net.dv8tion:JDA:4.0.0_73'
+    compile 'net.dv8tion:JDA:4.1.1_165'
 
     //Logback
     compile 'ch.qos.logback:logback-classic:1.2.3'

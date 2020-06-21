@@ -25,7 +25,7 @@ public class SubscriptionCommand implements ICommand {
         }
 
         if(args == null) {
-            event.getChannel().sendMessage("Syntax: `sub[scribe] role_name`").queue();
+            event.getChannel().sendMessage("Syntax: `sub[scribe] role_name [role_name...]`").queue();
             return;
         }
 

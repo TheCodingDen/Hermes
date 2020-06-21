@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 
 public class Listener extends ListenerAdapter {
     private final IGuildConfigProvider guildConfigProvider;
-    private Map<String, ICommand> commandMap = new HashMap<>();
-    private Set<ICommand> commands;
+    private final Map<String, ICommand> commandMap = new HashMap<>();
+    private final Set<ICommand> commands;
     private Pattern selfMentionPattern;
 
     public Listener(IGuildConfigProvider guildConfigProvider) {
@@ -39,7 +39,7 @@ public class Listener extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         //ignore bots, webhooks,...
-        if(event.getAuthor().isBot() || event.getAuthor().isFake())
+        if(event.getAuthor().isBot() || event.getMessage().isWebhookMessage() || event.getMember() == null)
             return;
 
         String messageContentRaw = event.getMessage().getContentRaw();

@@ -3,6 +3,11 @@ package com.kantenkugel.hermes;
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
 import com.kantenkugel.hermes.guildConfig.IGuildConfigProvider;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -26,10 +31,13 @@ public class Hermes {
                 GlobalConfig.GUILD_CONFIG_PROVIDER_ARGS);
 
         try {
-            new JDABuilder(GlobalConfig.TOKEN)
+            MessageAction.setDefaultMentions(EnumSet.noneOf(Message.MentionType.class));
+            JDABuilder.create(GlobalConfig.TOKEN, EnumSet.of(GatewayIntent.GUILD_MESSAGES))
                     .setBulkDeleteSplittingEnabled(false)
-                    .setDisabledCacheFlags(EnumSet.allOf(CacheFlag.class))
-                    .setGuildSubscriptionsEnabled(false)
+                    .setChunkingFilter(ChunkingFilter.NONE)
+                    .setMemberCachePolicy(MemberCachePolicy.NONE)
+                    .disableCache(EnumSet.allOf(CacheFlag.class))
+                    .enableCache(EnumSet.of(CacheFlag.MEMBER_OVERRIDES))
                     .addEventListeners(new Listener(guildConfigProvider))
                     .build();
         } catch(LoginException e) {

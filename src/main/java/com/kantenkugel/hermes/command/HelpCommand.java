@@ -1,6 +1,7 @@
 package com.kantenkugel.hermes.command;
 
 import com.kantenkugel.hermes.guildConfig.IGuildConfig;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.stream.Collectors;
@@ -18,7 +19,7 @@ public class HelpCommand implements ICommand {
     @Override
     public void handleCommand(GuildMessageReceivedEvent event, IGuildConfig guildConfig, String[] args) {
         String help = String.format(HELP_MESSAGE, guildConfig.getAnnouncerRoles(event.getGuild()).stream()
-                .map(r -> r.getName().replace("@everyone", "@ everyone"))
+                .map(Role::getName)
                 .collect(Collectors.joining(", "))
         );
         if(event.getChannel().canTalk()) {

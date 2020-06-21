@@ -32,12 +32,6 @@ public class AnnounceCommand implements ICommand {
             return;
         }
 
-        //check if bot can manage roles
-        if(!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES)) {
-            event.getChannel().sendMessage("Missing MANAGE_ROLES permission!").queue();
-            return;
-        }
-
         //get and check argument list
         String[] splits = args.isEmpty() ? null : args.split("\\s*\\|\\s*", 3);
         if(splits == null || splits.length < 2) {
@@ -60,6 +54,13 @@ public class AnnounceCommand implements ICommand {
             textToSend = splits[1].trim();
         }
 
+        //check if bot can manage roles
+        if(!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE) &&
+                !event.getGuild().getSelfMember().hasPermission(channel, Permission.MANAGE_ROLES)) {
+            event.getChannel().sendMessage("Missing MANAGE_ROLES or MENTION_EVERYONE permission!").queue();
+            return;
+        }
+
         //can bot talk in channel?
         if(!channel.canTalk()) {
             event.getChannel().sendMessage("Can not talk in target channel").queue();
@@ -79,7 +80,7 @@ public class AnnounceCommand implements ICommand {
         } else {
             Role role = roles.get(0);
             //announce
-            if(role.isMentionable()) {
+            if(role.isMentionable() || event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE)) {
                 channel.sendMessage(Utils.getAnnouncementMessage(role, textToSend, event.getMember()))
                         .queue(msg -> {
                             //cache sent message for future edits
