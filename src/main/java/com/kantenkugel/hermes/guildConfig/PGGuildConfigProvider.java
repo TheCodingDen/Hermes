@@ -58,7 +58,7 @@ public class PGGuildConfigProvider extends AbstractGuildConfigProvider<PGGuildCo
         Set<IGuildConfig> configs = new HashSet<>();
         try(ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM guildConfigs")) {
             while(rs.next()) {
-                //todo
+                configs.add(new PGConfigObject(rs.getLong("guildId"), rs));
             }
         } catch(SQLException e) {
             LOG.error("Error creating/Executing query", e);

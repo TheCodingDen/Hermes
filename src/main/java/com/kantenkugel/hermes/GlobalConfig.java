@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
+@SuppressWarnings("unchecked")
 public class GlobalConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(GlobalConfig.class);
@@ -32,7 +33,23 @@ public class GlobalConfig {
         String tmpToken = null;
         Class<? extends IGuildConfigProvider> tmpConfigProvider = JSONGuildConfigProvider.class;
         String tmpGuildConfigArgs = null;
-        if(!Files.exists(CONFIG_PATH)) {
+
+        if(System.getenv("token") != null) {
+            LOG.info("Using ENV for configuration");
+            tmpToken = System.getenv("token");
+            if(System.getenv("configprovider") != null) {
+                try {
+                    Class<?> provider = Class.forName(System.getenv("configprovider"));
+                    if(IGuildConfigProvider.class.isAssignableFrom(provider)) {
+                        tmpConfigProvider = ((Class<? extends IGuildConfigProvider>) provider);
+                        tmpGuildConfigArgs = System.getenv("configproviderargs");
+                    } else
+                        LOG.warn("guildConfigProvider.class not properly subclassing interface... Defaulting to JSON provider");
+                } catch(ClassNotFoundException ex) {
+                    LOG.warn("guildConfigProvider.class was not found in classpath... Defaulting to JSON provider");
+                }
+            }
+        } else if(!Files.exists(CONFIG_PATH)) {
             try {
                 Utils.writeJson(CONFIG_PATH, getDefaultConfig());
                 LOG.info("Created new config file. Please populate it and restart the bot");
@@ -41,6 +58,7 @@ public class GlobalConfig {
             }
             System.exit(0);
         } else {
+            LOG.info("Using config file for configuration");
             JSONObject obj = null;
             try {
                 obj = Utils.readJson(CONFIG_PATH);

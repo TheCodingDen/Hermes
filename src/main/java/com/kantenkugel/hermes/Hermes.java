@@ -72,17 +72,23 @@ public class Hermes {
                     newConfig.copyFromConfig(config);
                     newConfig.update();
                 }
-                LOG.info("Successfully migrated {} configurations. Storing new config entries...", allConfigurations.size());
-                try {
-                    JSONObject jsonObject = Utils.readJson(GlobalConfig.CONFIG_PATH);
-                    jsonObject.put("guildConfigProvider", new JSONObject()
-                            .put("class", newProviderClass.getName())
-                            .put("args", providerArgs)
-                    );
-                    Utils.writeJson(GlobalConfig.CONFIG_PATH, jsonObject);
-                    LOG.info("Done. Please verify the new config file and restart the Bot");
-                } catch(IOException e) {
-                    LOG.warn("Error updating the config file. Please update the config provider in there yourself and restart the Bot", e);
+                LOG.info("Successfully migrated {} configurations.", allConfigurations.size());
+
+                if(System.getenv("token") == null) {
+                    LOG.info("Rewriting new config entries...");
+                    try {
+                        JSONObject jsonObject = Utils.readJson(GlobalConfig.CONFIG_PATH);
+                        jsonObject.put("guildConfigProvider", new JSONObject()
+                                .put("class", newProviderClass.getName())
+                                .put("args", providerArgs)
+                        );
+                        Utils.writeJson(GlobalConfig.CONFIG_PATH, jsonObject);
+                        LOG.info("Done. Please verify the new config file and restart the Bot");
+                    } catch(IOException e) {
+                        LOG.warn("Error updating the config file. Please update the config provider in there yourself and restart the Bot", e);
+                    }
+                } else {
+                    LOG.info("Please restart the bot with the new config environment");
                 }
             } catch(ClassNotFoundException e) {
                 LOG.error("Could not find/assign new IGuildConfigProvider class {}", args[1], e);
