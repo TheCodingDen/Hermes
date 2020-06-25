@@ -22,6 +22,7 @@ which can be called by starting the message by mentioning him, then adding the c
 ## Running Hermes
 
 Hermes supports 2 Methods of supplying the bootup config: Via environment variables or via config.json file.
+When using the docker container, please refer to [this section](#configuring-a-docker-container)
 
 ### Using the config.json file
 
@@ -67,7 +68,12 @@ To use the PGGuildConfigProvider, provide `com.kantenkugel.hermes.guildConfig.PG
 
 ### Migrating between ConfigProviders
 
-TODO
+To migrate from one ConfigProvider to another, follow these steps:
+
+1. Make sure the config still points to the old ConfigProvider
+1. Run hermes with following command-line arguments: `migratedb <fully.qualified.IGuildProvider.class.reference> [<arguments for class init>]`
+1. Change the global config to now use the new ConfigProvider.
+This should happen automatically when using the `config.json`
 
 ## Building Hermes
 
@@ -86,3 +92,12 @@ The provided Dockerfile has 2 Modes:
 
 **Note:** Since this Dockerfile uses different build stages that are controlled by the build argument, 
 it is **strongly** recommended to use [Docker Buildkit](https://docs.docker.com/develop/develop-images/build_enhancements/) to improve performance.
+
+#### Configuring a Docker container
+
+When using the provided Dockerfile, environment variables are used for configuring Hermes.
+These can be set either at build time or at when starting the container.
+
+For the list of environment variables, check out the [config section above](#using-environment-variables)
+
+*Note:* The working directory inside the container is `/hermes` and relative filepaths (json config?) resolve against that directory.
